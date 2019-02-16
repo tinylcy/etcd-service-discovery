@@ -1,1 +1,1 @@
-# etcd-service-discovery
+A simple example to present service discovery with etcd.

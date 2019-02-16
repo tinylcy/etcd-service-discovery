@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const service = "/service_discovery"
+const service = "service_discovery"
 
 type Master struct {
 	sync.RWMutex
@@ -76,7 +76,18 @@ func (m *Master) WatchWorkers() {
 			continue
 		}
 
-		fmt.Println("action:", resp.Action, "key:", resp.Node.Key, "value:", resp.Node.Value)
+		// fmt.Println("action:", resp.Action, "key:", resp.Node.Key, "value:", resp.Node.Value)
+
+		switch resp.Action {
+		case "set", "update":
+			m.addNode(resp.Node.Key, resp.Node.Value)
+			break
+		case "expire", "delete":
+			m.deleteNode(resp.Node.Key)
+			break
+		default:
+			log.Printf("Master watches unknown resp, key: %s, value: %s", resp.Node.Key, resp.Node.Value)
+		}
 	}
 }
 
@@ -86,10 +97,17 @@ func (m *Master) GetNodes() (map[string]string, error) {
 	return m.nodes, nil
 }
 
-func (m *Master) delNode(node string) {
+func (m *Master) addNode(key string, value string) {
 	m.Lock()
 	defer m.Unlock()
 	// note: strings.TrimLeft("/sd/node1", "/sd") returns "node1"
-	node = strings.TrimLeft(node, m.key)
-	delete(m.nodes, node)
+	key = strings.TrimLeft(key, m.key)
+	m.nodes[key] = value
+}
+
+func (m *Master) deleteNode(key string) {
+	m.Lock()
+	defer m.Unlock()
+	key = strings.TrimLeft(key, m.key)
+	delete(m.nodes, key)
 }

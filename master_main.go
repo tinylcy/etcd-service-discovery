@@ -11,7 +11,11 @@ func main() {
 	go master.WatchWorkers()
 
 	for {
-		log.Println("...")
+		nodes, err := master.GetNodes()
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Master is running, nodes: %v", nodes)
 		time.Sleep(time.Second * 2)
 	}
 }
